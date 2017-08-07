@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.springmvc.dao.ToyMapper">
+    <resultMap id="toy-result" type="com.springmvc.pojo.Toy">
+        <id property="id" column="ID"/>
+        <result property="name" column="NAME"/>
+        <result property="price" column="PRICE"/>
+        <result property="createDate" column="create_date"/>
+    </resultMap>
+
+    <sql id="pagerHead">
+        select * from toy
+        inner join (select id from toy
+    </sql>
+    <sql id="whereCase">
+        <where>
+            1=1
+            <if test="name != null and name != ''">
+                and name like CONCAT(CONCAT('%',#{name}),'%')
+            </if>
+            <if test="beginDate != null and endDate != null">
+                and DATE_FORMAT(create_date,'%Y-%m-%d') BETWEEN DATE_FORMAT(#{beginDate},'%Y-%m-%d') and  DATE_FORMAT(#{endDate},'%Y-%m-%d')
+            </if>
+        </where>
+
+    </sql>
+    <sql id="orderBy">
+        order by
+        <choose>
+            <when test="sort == 'name'">name</when>
+            <when test="sort == 'price'">price</when>
+            <when test="sort == 'createDate'">create_date</when>
+            <otherwise>id</otherwise>
+        </choose>
+        <if test="order == 'asc'">asc</if>
+        <if test="order == 'desc'">desc</if>
+    </sql>
+    <sql id="pagerFoot">
+        limit #{pageNo},#{pageSize} ) as lim using(id)
+    </sql>
+    <select id="findByPager" resultMap="toy-result">
+        SELECT * FROM toy
+        INNER JOIN (
+        SELECT id FROM toy
+        <include refid="whereCase"/>
+        <include refid="orderBy"/> LIMIT #{pageNo}, #{pageSize}
+        ) AS lim USING(id)
+    </select>
+
+    <select id="getTotal" resultType="int">
+        select count(id) from toy <include refid="whereCase"/>
+    </select>
+
+    <select id="findByParam" resultMap="toy-result">
+        SELECT * FROM toy <include refid="whereCase"/>
+    </select>
+
+</mapper>
